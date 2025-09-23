@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev -p 3005",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start -p 3005",
+    "docker:build": "docker build -t clipers-frontend .",
+    "docker:run": "docker run -p 3005:3005 clipers-frontend"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

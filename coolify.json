@@ -1,0 +1,27 @@
+{
+  "name": "Clipers Frontend",
+  "description": "Next.js frontend application for the Clipers project",
+  "type": "docker",
+  "dockerfile": "Dockerfile",
+  "port": 3005,
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": "3005",
+    "HOSTNAME": "0.0.0.0",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "build": {
+    "command": "npm run build"
+  },
+  "healthcheck": {
+    "enabled": true,
+    "path": "/",
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3
+  },
+  "resources": {
+    "memory": "512Mi",
+    "cpu": "0.5"
+  }
+}

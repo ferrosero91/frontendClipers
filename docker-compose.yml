@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  clipers-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    volumes:
+      # Optional: Mount for development hot reload (comment out for production)
+      # - .:/app
+      # - /app/node_modules
+      # - /app/.next
+    networks:
+      - clipers-network
+
+networks:
+  clipers-network:
+    driver: bridge
