@@ -6,7 +6,7 @@ class ApiClient {
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
+      baseURL: process.env.NEXT_PUBLIC_API_URL || "https://backend.sufactura.store/api",
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
