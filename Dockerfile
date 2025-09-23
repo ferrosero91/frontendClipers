@@ -1,66 +1,49 @@
-# Use Node.js 18 Alpine as base image
-FROM node:18-alpine AS base
+# Multi-stage build para optimizar el tamaño de la imagen
+FROM openjdk:21-jdk-slim AS build
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven
+
+# Crear directorio de trabajo
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copiar archivos de configuración de Maven
+COPY pom.xml .
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Descargar dependencias (se cachea esta capa si pom.xml no cambia)
+RUN mvn dependency:go-offline -B
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+# Copiar código fuente
+COPY src ./src
 
-RUN \
-  if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  else npm run build; \
-  fi
+# Compilar aplicación
+RUN mvn clean package -DskipTests
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# Imagen de producción
+FROM openjdk:21-jdk-slim
+
+# Crear usuario no-root para seguridad
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+
+# Crear directorio de la aplicación
 WORKDIR /app
 
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-ENV NEXT_TELEMETRY_DISABLED 1
+# Crear directorio para uploads
+RUN mkdir -p /app/uploads && chown -R spring:spring /app
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copiar JAR desde la etapa de build
+COPY --from=build /app/target/*.jar app.jar
 
-COPY --from=builder /app/public ./public
+# Cambiar al usuario no-root
+USER spring:spring
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Exponer puerto 8082
+EXPOSE 8082
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Variables de entorno por defecto
+ENV SPRING_PROFILES_ACTIVE=coolify
+ENV SERVER_PORT=8082
+ENV JAVA_OPTS="-Xms512m -Xmx1024m"
 
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD ["node", "server.js"]
+# Comando de inicio
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
