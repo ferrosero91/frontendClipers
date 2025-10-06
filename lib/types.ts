@@ -34,6 +34,7 @@ export interface Cliper {
   transcription?: string
   skills: string[]
   userId: string
+  user?: User
   createdAt: string
   updatedAt: string
 }

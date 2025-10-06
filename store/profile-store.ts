@@ -50,9 +50,16 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   loadATSProfile: async (userId?: string) => {
     try {
-      const endpoint = userId ? `/ats-profiles/user/${userId}` : "/ats-profiles/me"
-      const atsProfile = await apiClient.get<ATSProfile>(endpoint)
-      set({ atsProfile })
+      const { profile } = get()
+      // Only load ATS profile for candidates
+      if (profile && "role" in profile && profile.role === "CANDIDATE") {
+        const endpoint = userId ? `/ats-profiles/user/${userId}` : "/ats-profiles/me"
+        const atsProfile = await apiClient.get<ATSProfile>(endpoint)
+        set({ atsProfile })
+      } else {
+        // Companies don't have ATS profiles
+        set({ atsProfile: null })
+      }
     } catch (error) {
       console.error("Error loading ATS profile:", error)
       // ATS profile might not exist yet

@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -73,8 +75,12 @@ export function CliperModal({ cliper, open, onOpenChange }: CliperModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Cliper: {currentCliper.title}</DialogTitle>
+        </DialogHeader>
+
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Video Player */}
+          {/* Video Player - Facebook/TikTok Style */}
           <div className="space-y-4">
             <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
               {currentCliper.status === "DONE" && currentCliper.videoUrl ? (
@@ -122,31 +128,43 @@ export function CliperModal({ cliper, open, onOpenChange }: CliperModalProps) {
             </div>
           </div>
 
-          {/* Cliper Details */}
+          {/* Cliper Details - Facebook Style */}
           <div className="space-y-6">
-            {/* Header */}
+            {/* Header - Creator Info */}
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>
+                  <FiUser className="h-6 w-6" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-semibold">Usuario</p>
+                <p className="text-sm text-muted-foreground">Candidato • {formatDistanceToNow(new Date(currentCliper.createdAt), { addSuffix: true, locale: es })}</p>
+              </div>
+            </div>
+
+            {/* Title and Description */}
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-balance">{currentCliper.title}</h2>
               <p className="text-muted-foreground text-pretty">{currentCliper.description}</p>
             </div>
 
-            <Separator />
-
-            {/* Creator Info */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>
-                  <FiUser className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">Usuario</p>
-                <p className="text-sm text-muted-foreground">Candidato</p>
-              </div>
-            </div>
-
-            <Separator />
+            {/* Skills */}
+            {currentCliper.skills.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  <h3 className="font-semibold">Habilidades destacadas</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentCliper.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Video Info */}
             <div className="space-y-4">
@@ -164,32 +182,14 @@ export function CliperModal({ cliper, open, onOpenChange }: CliperModalProps) {
                 </div>
                 <div className="flex items-center space-x-2">
                   <FiTag className="h-4 w-4 text-muted-foreground" />
-                  <span>{currentCliper.skills.length} habilidades</span>
+                  <span>{currentCliper.skills.length} habilidades identificadas</span>
                 </div>
               </div>
             </div>
 
-            {/* Skills */}
-            {currentCliper.skills.length > 0 && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Habilidades identificadas</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {currentCliper.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
             {/* Transcription */}
             {currentCliper.transcription && (
               <>
-                <Separator />
                 <div className="space-y-3">
                   <h3 className="font-semibold">Transcripción</h3>
                   <div className="bg-muted/50 rounded-lg p-4 max-h-40 overflow-y-auto">
@@ -198,6 +198,24 @@ export function CliperModal({ cliper, open, onOpenChange }: CliperModalProps) {
                 </div>
               </>
             )}
+
+            {/* Social Actions */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                <span className="flex items-center space-x-1">
+                  <span>👍</span>
+                  <span>Me gusta</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span>💬</span>
+                  <span>Comentar</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span>📤</span>
+                  <span>Compartir</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

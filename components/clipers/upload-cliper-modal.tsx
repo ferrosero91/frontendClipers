@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCliperStore } from "@/store/cliper-store"
-import { FiUpload, FiVideo, FiX, FiCheck } from "react-icons/fi"
+import { VideoRecorder } from "./video-recorder"
+import { FiUpload, FiVideo, FiX, FiCheck, FiCamera } from "react-icons/fi"
 
 interface UploadCliperModalProps {
   open: boolean
@@ -20,11 +22,13 @@ interface UploadCliperModalProps {
 
 export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps) {
   const [file, setFile] = useState<File | null>(null)
+  const [recordedVideoBlob, setRecordedVideoBlob] = useState<Blob | null>(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState("upload")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { uploadCliper, uploadProgress } = useCliperStore()
 
@@ -58,15 +62,28 @@ export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile) {
+      // Create a proper synthetic event
       const fakeEvent = {
         target: { files: [droppedFile] },
-      } as React.ChangeEvent<HTMLInputElement>
+      } as unknown as React.ChangeEvent<HTMLInputElement>
       handleFileSelect(fakeEvent)
     }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+  }
+
+  const handleVideoRecorded = (blob: Blob) => {
+    // Convert blob to file
+    const videoFile = new File([blob], `recorded-video-${Date.now()}.webm`, { type: 'video/webm' })
+    setRecordedVideoBlob(blob)
+    setFile(videoFile)
+
+    // Auto-generate title
+    if (!title) {
+      setTitle(`Video grabado ${new Date().toLocaleDateString()}`)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,11 +110,13 @@ export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps
 
   const handleClose = () => {
     setFile(null)
+    setRecordedVideoBlob(null)
     setTitle("")
     setDescription("")
     setIsUploading(false)
     setUploadComplete(false)
     setError("")
+    setActiveTab("upload")
     onOpenChange(false)
   }
 
@@ -131,52 +150,94 @@ export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Subir nuevo Cliper</DialogTitle>
+          <DialogTitle>Crear nuevo Cliper</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {/* File Upload */}
-          <div className="space-y-2">
-            <Label>Video *</Label>
-            {!file ? (
-              <div
-                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <FiUpload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Arrastra tu video aquí o haz clic para seleccionar</p>
-                  <p className="text-xs text-muted-foreground">MP4, MOV, AVI hasta 100MB</p>
-                </div>
-                <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileSelect} className="hidden" />
-              </div>
-            ) : (
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <FiVideo className="h-8 w-8 text-primary" />
-                    <div>
-                      <p className="font-medium text-sm">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload" className="flex items-center gap-2">
+                <FiUpload className="w-4 h-4" />
+                Subir Archivo
+              </TabsTrigger>
+              <TabsTrigger value="record" className="flex items-center gap-2">
+                <FiCamera className="w-4 h-4" />
+                Grabar Video
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upload" className="space-y-4">
+              {/* File Upload */}
+              <div className="space-y-2">
+                <Label>Video *</Label>
+                {!file ? (
+                  <div
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <FiUpload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Arrastra tu video aquí o haz clic para seleccionar</p>
+                      <p className="text-xs text-muted-foreground">MP4, MOV, AVI hasta 100MB</p>
+                    </div>
+                    <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileSelect} className="hidden" />
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-4 bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <FiVideo className="h-8 w-8 text-primary" />
+                        <div>
+                          <p className="font-medium text-sm">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setFile(null)} disabled={isUploading}>
+                        <FiX className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setFile(null)} disabled={isUploading}>
-                    <FiX className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="record" className="space-y-4">
+              {/* Video Recorder */}
+              <div className="space-y-2">
+                <Label>Grabar Video *</Label>
+                <VideoRecorder onVideoRecorded={handleVideoRecorded} maxDuration={60} />
+                {recordedVideoBlob && (
+                  <div className="border rounded-lg p-4 bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <FiVideo className="h-8 w-8 text-primary" />
+                        <div>
+                          <p className="font-medium text-sm">Video grabado</p>
+                          <p className="text-xs text-muted-foreground">{formatFileSize(recordedVideoBlob.size)}</p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => {
+                        setRecordedVideoBlob(null)
+                        setFile(null)
+                      }} disabled={isUploading}>
+                        <FiX className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Title */}
           <div className="space-y-2">
@@ -225,7 +286,7 @@ export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps
               Cancelar
             </Button>
             <Button type="submit" disabled={!file || !title.trim() || isUploading}>
-              {isUploading ? "Subiendo..." : "Subir Cliper"}
+              {isUploading ? "Creando..." : "Crear Cliper"}
             </Button>
           </div>
         </form>

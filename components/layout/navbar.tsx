@@ -63,6 +63,20 @@ export function Navbar() {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                {/* Desktop User Actions */}
+                <div className="hidden md:flex items-center space-x-2">
+                  <Button variant="ghost" asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Perfil
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Cerrar sesión
+                  </Button>
+                </div>
+
                 {/* Mobile Menu Button */}
                 <Button
                   variant="ghost"
@@ -117,7 +131,7 @@ export function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 focus:bg-red-50">
                       <LogOut className="mr-2 h-4 w-4" />
                       Cerrar sesión
                     </DropdownMenuItem>
@@ -152,6 +166,26 @@ export function Navbar() {
                   <span>{item.label}</span>
                 </Link>
               ))}
+              <div className="border-t pt-2 mt-2">
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-2 px-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="h-4 w-4" />
+                  <span>Perfil</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex items-center space-x-2 px-2 py-2 w-full text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

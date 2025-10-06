@@ -8,7 +8,7 @@ import { EditEducationModal } from "../modals/edit-education-modal"
 import { useProfileStore } from "@/store/profile-store"
 import { useToast } from "@/hooks/use-toast"
 import type { ATSProfile, Education } from "@/lib/types"
-import { FiPlus, FiEdit3, FiTrash2, FiGraduationCap } from "react-icons/fi"
+import { FiPlus, FiEdit3, FiTrash2, FiBookOpen } from "react-icons/fi"
 
 interface EducationTabProps {
   atsProfile: ATSProfile | null
@@ -102,7 +102,7 @@ export function EducationTab({ atsProfile, isOwnProfile }: EducationTabProps) {
             <CardContent className="text-center py-12">
               <div className="space-y-4">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                  <FiGraduationCap className="h-8 w-8 text-muted-foreground" />
+                  <FiBookOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">No hay información educativa</h3>

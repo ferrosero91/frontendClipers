@@ -77,10 +77,20 @@ export function PostCard({ post }: PostCardProps) {
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(post.createdAt), {
-                  addSuffix: true,
-                  locale: es,
-                })}
+                {(() => {
+                  try {
+                    const date = new Date(post.createdAt)
+                    if (isNaN(date.getTime())) {
+                      return "Fecha inválida"
+                    }
+                    return formatDistanceToNow(date, {
+                      addSuffix: true,
+                      locale: es,
+                    })
+                  } catch (error) {
+                    return "Fecha inválida"
+                  }
+                })()}
               </p>
             </div>
           </div>
@@ -134,7 +144,7 @@ export function PostCard({ post }: PostCardProps) {
               className="space-x-2 text-muted-foreground"
             >
               <MessageCircle className="h-4 w-4" />
-              <span>{post.comments.length}</span>
+              <span>{post.comments?.length || 0}</span>
             </Button>
 
             <Button variant="ghost" size="sm" className="space-x-2 text-muted-foreground">

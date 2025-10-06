@@ -4,8 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Suspense } from "react"
 import "./globals.css"
-import { Navbar } from "@/components/layout/navbar"
-
+import { ClientLayout } from "../components/layout/client-layout"
 export const metadata: Metadata = {
   title: "Clipers - Red Social de Empleos Académica",
   description: "Conecta con oportunidades laborales a través de videos cortos profesionales",
@@ -27,8 +26,9 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Navbar />
-        <Suspense fallback={null}>{children}</Suspense>
+        <ClientLayout>
+          <Suspense fallback={null}>{children}</Suspense>
+        </ClientLayout>
       </body>
     </html>
   )

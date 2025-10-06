@@ -73,7 +73,7 @@ export const useJobStore = create<JobState>((set, get) => ({
         jobs: Job[]
         hasMore: boolean
         totalPages: number
-      }>(`/jobs?${params}`)
+      }>(`/jobs/public?${params}`)
 
       set((state) => ({
         jobs: refresh ? response.jobs : [...state.jobs, ...response.jobs],

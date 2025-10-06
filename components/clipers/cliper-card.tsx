@@ -50,6 +50,7 @@ export function CliperCard({ cliper }: CliperCardProps) {
   return (
     <>
       <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer">
+        {/* Video Container - Facebook/TikTok Style */}
         <div className="relative aspect-video bg-muted overflow-hidden" onClick={() => setShowModal(true)}>
           {cliper.thumbnailUrl ? (
             <img
@@ -65,7 +66,7 @@ export function CliperCard({ cliper }: CliperCardProps) {
 
           {/* Play Overlay */}
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
               <Play className="h-6 w-6 text-primary ml-1" />
             </div>
           </div>
@@ -88,15 +89,34 @@ export function CliperCard({ cliper }: CliperCardProps) {
 
         <CardContent className="p-4">
           <div className="space-y-3">
+            {/* Header - User Info */}
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Usuario</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(cliper.createdAt), {
+                    addSuffix: true,
+                    locale: es,
+                  })}
+                </p>
+              </div>
+            </div>
+
             {/* Title and Description */}
-            <div className="space-y-1">
-              <h3 className="font-semibold text-sm line-clamp-1">{cliper.title}</h3>
-              <p className="text-xs text-muted-foreground line-clamp-2">{cliper.description}</p>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-base line-clamp-2">{cliper.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-3">{cliper.description}</p>
             </div>
 
             {/* Skills */}
             {cliper.skills.length > 0 && (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-2">
                 {cliper.skills.slice(0, 3).map((skill, index) => (
                   <Badge key={index} variant="secondary" className="text-xs">
                     {skill}
@@ -110,32 +130,12 @@ export function CliperCard({ cliper }: CliperCardProps) {
               </div>
             )}
 
-            {/* Processing Progress */}
-            {cliper.status === "PROCESSING" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Procesando...</span>
-                  <span className="text-warning">75%</span>
-                </div>
-                <Progress value={75} className="h-1" />
-              </div>
-            )}
-
-            {/* Footer */}
+            {/* Actions */}
             <div className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center space-x-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="text-xs">
-                    <User className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(cliper.createdAt), {
-                    addSuffix: true,
-                    locale: es,
-                  })}
-                </span>
+              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <span>👍 Me gusta</span>
+                <span>💬 Comentar</span>
+                <span>📤 Compartir</span>
               </div>
               <Button variant="ghost" size="sm">
                 <MoreHorizontal className="h-4 w-4" />

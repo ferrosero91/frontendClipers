@@ -7,7 +7,7 @@ interface FeedState {
   isLoading: boolean
   hasMore: boolean
   page: number
-  createPost: (content: string, type?: "TEXT" | "IMAGE" | "VIDEO") => Promise<void>
+  createPost: (content: string, type?: "TEXT" | "IMAGE" | "VIDEO", imageUrl?: string) => Promise<void>
   loadFeed: (refresh?: boolean) => Promise<void>
   likePost: (postId: string) => Promise<void>
   addComment: (postId: string, content: string) => Promise<void>
@@ -20,11 +20,12 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   hasMore: true,
   page: 0,
 
-  createPost: async (content: string, type: "TEXT" | "IMAGE" | "VIDEO" = "TEXT") => {
+  createPost: async (content: string, type: "TEXT" | "IMAGE" | "VIDEO" = "TEXT", imageUrl?: string) => {
     try {
       const newPost = await apiClient.post<Post>("/posts", {
         content,
         type: type.toLowerCase(),
+        imageUrl,
       })
 
       set((state) => ({
@@ -94,13 +95,11 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           post.id === postId
             ? {
                 ...post,
-                comments: post.comments + 1,
+                comments: [...post.comments, comment],
               }
             : post,
         ),
       }))
-
-      return comment
     } catch (error) {
       console.error("Error adding comment:", error)
       throw error

@@ -10,6 +10,7 @@ interface CliperState {
   page: number
   uploadCliper: (file: File, title: string, description: string) => Promise<string>
   loadClipers: (refresh?: boolean) => Promise<void>
+  loadMyClipers: () => Promise<void>
   getCliperStatus: (cliperId: string) => Promise<Cliper>
   deleteCliper: (cliperId: string) => Promise<void>
 }
@@ -75,6 +76,23 @@ export const useCliperStore = create<CliperState>((set, get) => ({
       }))
     } catch (error) {
       console.error("Error loading clipers:", error)
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
+  loadMyClipers: async () => {
+    set({ isLoading: true })
+
+    try {
+      const clipers = await apiClient.get<Cliper[]>("/clipers/my")
+
+      set((state) => ({
+        clipers: clipers,
+        isLoading: false,
+      }))
+    } catch (error) {
+      console.error("Error loading my clipers:", error)
       set({ isLoading: false })
       throw error
     }

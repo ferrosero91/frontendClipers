@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { EditATSSummaryModal } from "../modals/edit-ats-summary-modal"
 import { useAuthStore } from "@/store/auth-store"
 import type { User, Company, ATSProfile } from "@/lib/types"
-import { FiBriefcase, FiGraduationCap, FiStar, FiMapPin, FiUsers, FiEdit3 } from "react-icons/fi"
+import { FiBriefcase, FiBookOpen, FiStar, FiMapPin, FiUsers, FiEdit3 } from "react-icons/fi"
 
 interface OverviewTabProps {
   profile: User | Company | null
@@ -141,7 +141,7 @@ export function OverviewTab({ profile, atsProfile }: OverviewTabProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <FiGraduationCap className="h-5 w-5" />
+                  <FiBookOpen className="h-5 w-5" />
                   <span>Educación</span>
                 </CardTitle>
               </CardHeader>

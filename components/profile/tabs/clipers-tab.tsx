@@ -18,7 +18,7 @@ interface ClipersTabProps {
 
 export function ClipersTab({ profile, isOwnProfile }: ClipersTabProps) {
   const [showUploadModal, setShowUploadModal] = useState(false)
-  const { clipers, loadClipers } = useCliperStore()
+  const { clipers, loadClipers, loadMyClipers } = useCliperStore()
   const { jobs, searchJobs } = useJobStore()
   const { user } = useAuthStore()
 
@@ -28,11 +28,14 @@ export function ClipersTab({ profile, isOwnProfile }: ClipersTabProps) {
     if (isCompany && isOwnProfile) {
       // Load company jobs
       searchJobs("", {}, true)
+    } else if (isOwnProfile) {
+      // Load user's own clipers
+      loadMyClipers()
     } else {
-      // Load user clipers
+      // Load public clipers for other users' profiles
       loadClipers(true)
     }
-  }, [isCompany, isOwnProfile, loadClipers, searchJobs])
+  }, [isCompany, isOwnProfile, loadClipers, loadMyClipers, searchJobs])
 
   if (isCompany) {
     // Show company jobs
