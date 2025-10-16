@@ -1,49 +1,64 @@
-# Multi-stage build para optimizar el tamaño de la imagen
-FROM openjdk:21-jdk-slim AS build
+# Multi-stage build para Next.js
+FROM node:18-alpine AS base
 
-# Instalar Maven
-RUN apt-get update && apt-get install -y maven
-
-# Crear directorio de trabajo
+# Instalar dependencias solo cuando cambien los archivos de dependencias
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copiar archivos de configuración de Maven
-COPY pom.xml .
+# Copiar archivos de dependencias
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
-# Descargar dependencias (se cachea esta capa si pom.xml no cambia)
-RUN mvn dependency:go-offline -B
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Copiar código fuente
-COPY src ./src
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Compilar aplicación
-RUN mvn clean package -DskipTests
+RUN \
+  if [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm run build; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
-# Imagen de producción
-FROM openjdk:21-jdk-slim
-
-# Crear usuario no-root para seguridad
-RUN addgroup --system spring && adduser --system spring --ingroup spring
-
-# Crear directorio de la aplicación
+# Production image, copy all the files and run next
+FROM base AS runner
 WORKDIR /app
 
-# Crear directorio para uploads
-RUN mkdir -p /app/uploads && chown -R spring:spring /app
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Copiar JAR desde la etapa de build
-COPY --from=build /app/target/*.jar app.jar
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Cambiar al usuario no-root
-USER spring:spring
+COPY --from=builder /app/public ./public
 
-# Exponer puerto 8082
-EXPOSE 8082
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# Variables de entorno por defecto
-ENV SPRING_PROFILES_ACTIVE=coolify
-ENV SERVER_PORT=8082
-ENV JAVA_OPTS="-Xms512m -Xmx1024m"
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Comando de inicio
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+# set hostname to localhost
+ENV HOSTNAME "0.0.0.0"
+
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
+CMD ["node", "server.js"]
