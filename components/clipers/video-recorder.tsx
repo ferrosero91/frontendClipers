@@ -22,6 +22,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasPermission, setHasPermission] = useState(false);
+  const [mimeType, setMimeType] = useState('video/webm');
 
   const startCamera = useCallback(async () => {
     try {
@@ -63,17 +64,19 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
     chunksRef.current = [];
 
     // Try different mime types for better compatibility
-    let mimeType = 'video/webm';
+    let selectedMimeType = 'video/webm';
     if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) {
-      mimeType = 'video/webm;codecs=vp9,opus';
+      selectedMimeType = 'video/webm;codecs=vp9,opus';
     } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-      mimeType = 'video/webm;codecs=vp8,opus';
+      selectedMimeType = 'video/webm;codecs=vp8,opus';
     } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-      mimeType = 'video/mp4';
+      selectedMimeType = 'video/mp4';
     }
 
+    setMimeType(selectedMimeType);
+
     const recorder = new MediaRecorder(streamRef.current, {
-      mimeType: mimeType
+      mimeType: selectedMimeType
     });
 
     recorder.ondataavailable = (event) => {
@@ -83,7 +86,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
     };
 
     recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const blob = new Blob(chunksRef.current, { type: 'video/mp4' });
       const videoUrl = URL.createObjectURL(blob);
       setRecordedVideo(videoUrl);
       onVideoRecorded(blob);
@@ -211,7 +214,7 @@ export const VideoRecorder: React.FC<VideoRecorderProps> = ({
           {recordedVideo && (
             <div className="space-y-2">
               <Button
-                onClick={() => onVideoRecorded(new Blob(chunksRef.current, { type: 'video/webm' }))}
+                onClick={() => onVideoRecorded(new Blob(chunksRef.current, { type: mimeType }))}
                 variant="default"
                 size="sm"
                 className="w-full"

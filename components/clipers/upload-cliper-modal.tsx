@@ -75,8 +75,8 @@ export function UploadCliperModal({ open, onOpenChange }: UploadCliperModalProps
   }
 
   const handleVideoRecorded = (blob: Blob) => {
-    // Convert blob to file
-    const videoFile = new File([blob], `recorded-video-${Date.now()}.webm`, { type: 'video/webm' })
+    // Convert blob to file - force .mp4 extension for microservice compatibility
+    const videoFile = new File([blob], `recorded-video-${Date.now()}.mp4`, { type: 'video/mp4' })
     setRecordedVideoBlob(blob)
     setFile(videoFile)
 
